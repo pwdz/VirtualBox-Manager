@@ -2,6 +2,7 @@ package vboxWrapper
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"os/exec"
 	"regexp"
@@ -21,12 +22,11 @@ import (
 	vboxmanage modifyvm <name or UUID> --cpus <number>
 */
 const(
-	PowerOn = iota
-	PowerOff
+	VBoxCommand = "vboxmanage"
 )
 
 func printCommand(cmd *exec.Cmd) {
-  fmt.Printf("==> Executing: %s\n", strings.Join(cmd.Args, " "))
+  log.Printf("==> Executing: %s\n", strings.Join(cmd.Args, " "))
 }
 
 func printError(err error) {
@@ -37,29 +37,46 @@ func printError(err error) {
 
 func printOutput(outs []byte) {
   if len(outs) > 0 {
-    fmt.Printf("==> Output: %s\n", string(outs))
+    log.Printf("==> Output: %s\n", string(outs))
   }
 }
 
 func GetStatus(vmName string) (string, error){
-	cmd := exec.Command("vboxmanage", "showvminfo",vmName,"--machinereadable")
+	cmd := exec.Command(VBoxCommand, "showvminfo",vmName,"--machinereadable")
 
 	printCommand(cmd)
 	output, err := cmd.CombinedOutput()
-	printOutput(output)
 	if err != nil{
 		printError(err)
 		return "", err
 	}
 	regex, _ := regexp.Compile("VMState=\"[a-zA-Z]+\"")
 	status := regex.FindString(string(output))
-	return strings.Split(status, "=")[1], nil
+	log.Println(status)
+	status = strings.Split(status, "=")[1]
+	status = strings.Trim(status, "\"")
+	return status, nil
 }
 
-func PowerOffNo(status int){
-	if status == PowerOff{
+func PowerOn(vmName string){
+	status, _ := GetStatus(vmName)
+	if status == "poweroff" {
+		cmd := exec.Command(VBoxCommand, "startvm",vmName,"--type","headless")
 
-	}else if status == PowerOn{
+		printCommand(cmd)
+		output, err := cmd.CombinedOutput()
+		printOutput(output)
+		printError(err)
+	}
+}
+func PowerOff(vmName string){
+	status, _ := GetStatus(vmName)
+	if status == "running" {
+		cmd := exec.Command(VBoxCommand, "controlvm",vmName,"poweroff")
 
+		printCommand(cmd)
+		output, err := cmd.CombinedOutput()
+		printOutput(output)
+		printError(err)
 	}
 }

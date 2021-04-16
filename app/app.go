@@ -15,7 +15,8 @@ import (
 )
 const(
 	CMDStatus	= "status"
-	CMDOnOff	= "on/off"
+	CMDOn		= "on"
+	CMDOnOff	= "off"
 	CMDSetting	= "setting"
 	CMDClone	= "clone"
 	CMDDelete	= "delete"
@@ -81,7 +82,7 @@ func handleCommand(cmd command){
 	switch cmd.Type{
 	case CMDStatus:
 		handleStatus(cmd)
-	case CMDOnOff:
+	case CMDOn, CMDOnOff:
 		handleOnOff(cmd)
 	case CMDDelete:
 		handleDelete(cmd)
@@ -106,7 +107,11 @@ func handleStatus(cmd command) string{
 	return status
 }
 func handleOnOff(cmd command){
-
+	if cmd.Type == CMDOn{
+		vbox.PowerOn(cmd.VmName)
+	}else{
+		vbox.PowerOff(cmd.VmName)
+	}
 }
 func handleDelete(cmd command){
 
