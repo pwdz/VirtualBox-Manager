@@ -98,3 +98,10 @@ func ChangeSetting(vmName string, cpu, ram int){
 		printError(err)
 	}
 }
+func Clone(vmSrc, vmDst string){
+	cmd := exec.Command(VBoxCommand, "clonevm",vmSrc,"--name",vmDst, "--register")
+	printCommand(cmd)
+	output, err := cmd.CombinedOutput()
+	printOutput(output)
+	printError(err)	
+}

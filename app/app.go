@@ -123,7 +123,7 @@ func handleTransfer(cmd command){
 
 }
 func handleClone(cmd command){
-
+	vbox.Clone(cmd.SourceVmName, cmd.DestVmName)
 }
 func handleExecute(cmd command){
 
