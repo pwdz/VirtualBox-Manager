@@ -105,3 +105,10 @@ func Clone(vmSrc, vmDst string){
 	printOutput(output)
 	printError(err)	
 }
+func Delete(vmName string){
+	cmd := exec.Command(VBoxCommand, "unregistervm",vmName,"--delete")
+	printCommand(cmd)
+	output, err := cmd.CombinedOutput()
+	printOutput(output)
+	printError(err)	
+}

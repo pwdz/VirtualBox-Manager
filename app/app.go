@@ -114,7 +114,7 @@ func handleOnOff(cmd command){
 	}
 }
 func handleDelete(cmd command){
-
+	vbox.Delete(cmd.VmName)
 }
 func handleSetting(cmd command){
 	vbox.ChangeSetting(cmd.VmName, cmd.Cpu, cmd.Ram)
