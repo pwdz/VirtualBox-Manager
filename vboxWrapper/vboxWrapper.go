@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"regexp"
+	"strconv"
 	"strings"
 )
 
@@ -74,6 +75,23 @@ func PowerOff(vmName string){
 	if status == "running" {
 		cmd := exec.Command(VBoxCommand, "controlvm",vmName,"poweroff")
 
+		printCommand(cmd)
+		output, err := cmd.CombinedOutput()
+		printOutput(output)
+		printError(err)
+	}
+}
+
+func ChangeSetting(vmName string, cpu, ram int){
+	if cpu > 0{
+		cmd := exec.Command(VBoxCommand, "modifyvm",vmName,"--cpus",strconv.Itoa(cpu))
+		printCommand(cmd)
+		output, err := cmd.CombinedOutput()
+		printOutput(output)
+		printError(err)
+	}
+	if ram > 0{
+		cmd := exec.Command(VBoxCommand, "modifyvm",vmName,"--memory",strconv.Itoa(ram))
 		printCommand(cmd)
 		output, err := cmd.CombinedOutput()
 		printOutput(output)
