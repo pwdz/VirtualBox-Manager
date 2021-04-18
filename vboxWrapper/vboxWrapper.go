@@ -112,3 +112,42 @@ func Delete(vmName string){
 	printOutput(output)
 	printError(err)	
 }
+func Execute(vmName, input string){
+	cmd := exec.Command(VBoxCommand, "guestcontrol",vmName,"run","bin/sh","--username","pwdz","--password", "pwdz", "--wait-stdout", "--wait-stderr", "--","-c",input)
+	printCommand(cmd)
+	output, err := cmd.CombinedOutput()
+	printOutput(output)
+	printError(err)	
+}
+func Transfer(vmSrc, vmDst, originPath, dstPath string){
+	 _, err := os.Stat("./temp")
+    if err != nil && os.IsNotExist(err){
+		os.Mkdir("temp", 666)
+	}
+
+	paths := strings.Split(originPath, "/")
+	fileName := paths[len(paths) - 1]
+
+	internalPath :=   "./temp/" 
+	log.Println(vmSrc, vmDst)
+
+	copyFromCommand := exec.Command(VBoxCommand, "guestcontrol",vmSrc,"copyfrom","--target-directory",internalPath , originPath,"--username","pwdz","--password", "pwdz")
+	printCommand(copyFromCommand)
+	copyFromOutput, err := copyFromCommand.CombinedOutput()
+	printOutput(copyFromOutput)
+	printError(err)	
+
+	internalPath += fileName
+	copyToCommand := exec.Command(VBoxCommand, "guestcontrol",vmDst,"copyto","--target-directory",dstPath, internalPath,"--username","pwdz","--password", "pwdz")
+	printCommand(copyToCommand)
+	copyToOutput, err := copyToCommand.CombinedOutput()
+	printOutput(copyToOutput)
+	printError(err)	
+}
+func Upload(vmDst, dstPath, originPath string ){
+	copyToCommand := exec.Command(VBoxCommand, "guestcontrol",vmDst,"copyto","--target-directory",dstPath, originPath,"--username","pwdz","--password", "pwdz")
+	printCommand(copyToCommand)
+	copyToOutput, err := copyToCommand.CombinedOutput()
+	printOutput(copyToOutput)
+	printError(err)	
+}

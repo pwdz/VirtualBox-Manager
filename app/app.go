@@ -1,13 +1,16 @@
 package app
 
 import (
-	"fmt"
-	// "log"
-	// "log"
-	// "io/ioutil"
 	"encoding/json"
 	"errors"
+	"fmt"
+	"log"
 	"net/http"
+	"os"
+	"strings"
+
+	// "log"
+	"io/ioutil"
 
 	"github.com/ilyakaznacheev/cleanenv"
 	"github.com/labstack/echo/v4"
@@ -49,7 +52,7 @@ func InitCfg(){
 }
 func InitServer(){
 	e = echo.New()
-	e.GET("/", endPointHandler)
+	e.Any("/", endPointHandler)
 	e.Logger.Fatal(e.Start(Cfg.Host + ":" + Cfg.Port))
 }
 func endPointHandler(c echo.Context) error{
@@ -71,10 +74,37 @@ func endPointHandler(c echo.Context) error{
 			}
 		}
 
-		handleCommand(cmd)
-	}else{
-		//TODO: upload file
+	}else if strings.Contains(headerContentType, "multipart/form-data"){
+		c.Request().ParseMultipartForm(10 << 20)
+		file, handler, err := c.Request().FormFile("file")
+		if err != nil{
+			return err
+		}
+		defer file.Close()
+			
+		emptyFile, err := os.Create(handler.Filename)
+		if err != nil {
+			return err
+		}
+		fileBytes, err := ioutil.ReadAll(file)
+		if err != nil {
+			return err
+		}
+		emptyFile.Write(fileBytes)
+		emptyFile.Close()
+
+		vmName := c.Request().FormValue("vmName")
+		dstPath := c.Request().FormValue("destPath") 
+
+		cmd = command{
+			Type: CMDUpload,
+			DestVM: vmName,
+			DestPath: dstPath,
+			OriginPath: handler.Filename,
+		}
 	}
+
+	handleCommand(cmd)
 
 	return c.String(http.StatusOK, "")
 }
@@ -120,14 +150,15 @@ func handleSetting(cmd command){
 	vbox.ChangeSetting(cmd.VmName, cmd.Cpu, cmd.Ram)
 }
 func handleTransfer(cmd command){
-
+	vbox.Transfer(cmd.OriginVM, cmd.DestVM, cmd.OriginPath, cmd.DestPath)
 }
 func handleClone(cmd command){
 	vbox.Clone(cmd.SourceVmName, cmd.DestVmName)
 }
 func handleExecute(cmd command){
-
+	vbox.Execute(cmd.VmName, cmd.Input)
 }
 func handleUpload(cmd command){
-	
+	fmt.Println(cmd)
+	vbox.Upload(cmd.DestVM, cmd.DestPath, cmd.OriginPath)
 }
