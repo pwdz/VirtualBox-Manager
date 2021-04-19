@@ -157,7 +157,8 @@ func handleCommand(cmd command){
 		bytess:=handleOnOff(cmd)
 		log.Println(string(bytess))
 	case CMDDelete:
-		handleDelete(cmd)
+		bytess:=handleDelete(cmd)
+		log.Println(string(bytess))
 	case CMDSetting:
 		handleSetting(cmd)
 	case CMDTransfer:
@@ -223,8 +224,16 @@ func handleOnOff(cmd command) []byte{
 	respJson, _ := json.Marshal(resp)
 	return tools.ConcatJsons(cmdJson, respJson)
 }
-func handleDelete(cmd command){
-	vbox.Delete(cmd.VmName)
+func handleDelete(cmd command)[]byte{
+	status, err := vbox.Delete(cmd.VmName)
+	resp := response{Status: status}
+	if err != nil{
+		resp.Err = err.Error()
+	}
+
+	cmdJson, _ := json.Marshal(cmd)
+	respJson, _ := json.Marshal(resp)
+	return tools.ConcatJsons(cmdJson, respJson)
 }
 func handleSetting(cmd command){
 	vbox.ChangeSetting(cmd.VmName, cmd.Cpu, cmd.Ram)

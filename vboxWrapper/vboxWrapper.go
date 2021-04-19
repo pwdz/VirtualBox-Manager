@@ -142,12 +142,17 @@ func Clone(vmSrc, vmDst string){
 	printOutput(output)
 	printError(err)	
 }
-func Delete(vmName string){
+func Delete(vmName string)(string, error){
 	cmd := exec.Command(VBoxCommand, "unregistervm",vmName,"--delete")
 	printCommand(cmd)
 	output, err := cmd.CombinedOutput()
 	printOutput(output)
-	printError(err)	
+	if err != nil{
+		printError(err)
+		return "", fmt.Errorf(string(output))
+	}
+
+	return "Ok", nil
 }
 func Execute(vmName, input string){
 	cmd := exec.Command(VBoxCommand, "guestcontrol",vmName,"run","bin/sh","--username","pwdz","--password", "pwdz", "--wait-stdout", "--wait-stderr", "--","-c",input)
