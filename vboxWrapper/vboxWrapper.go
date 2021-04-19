@@ -177,7 +177,7 @@ func Execute(vmName, input string)(string, string, error){
 
 	return "Ok", string(output), nil
 }
-func Transfer(vmSrc, vmDst, originPath, dstPath string){
+func Transfer(vmSrc, vmDst, originPath, dstPath string)(string, error){
 	 _, err := os.Stat("./temp")
     if err != nil && os.IsNotExist(err){
 		os.Mkdir("temp", 666)
@@ -193,19 +193,33 @@ func Transfer(vmSrc, vmDst, originPath, dstPath string){
 	printCommand(copyFromCommand)
 	copyFromOutput, err := copyFromCommand.CombinedOutput()
 	printOutput(copyFromOutput)
-	printError(err)	
+	if err != nil{
+		printError(err)
+		return "", fmt.Errorf(string(copyFromOutput))
+	}
+
 
 	internalPath += fileName
 	copyToCommand := exec.Command(VBoxCommand, "guestcontrol",vmDst,"copyto","--target-directory",dstPath, internalPath,"--username","pwdz","--password", "pwdz")
 	printCommand(copyToCommand)
 	copyToOutput, err := copyToCommand.CombinedOutput()
 	printOutput(copyToOutput)
-	printError(err)	
+	if err != nil{
+		printError(err)
+		return "", fmt.Errorf(string(copyToOutput))
+	}
+
+	return "Ok", nil
 }
-func Upload(vmDst, dstPath, originPath string ){
+func Upload(vmDst, dstPath, originPath string)(string, error){
 	copyToCommand := exec.Command(VBoxCommand, "guestcontrol",vmDst,"copyto","--target-directory",dstPath, "D:/AUT/Courses/Term6/Cloud Computing/CloudComputing/TestFile.txt","--username","pwdz","--password", "pwdz", "--verbose")
 	printCommand(copyToCommand)
 	copyToOutput, err := copyToCommand.CombinedOutput()
 	printOutput(copyToOutput)
-	printError(err)	
+	if err != nil{
+		printError(err)
+		return "", fmt.Errorf(string(copyToOutput))
+	}
+
+	return "Ok", nil
 }
