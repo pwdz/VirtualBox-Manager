@@ -119,21 +119,27 @@ func PowerOff(vmName string)(string, error){
 	return "", fmt.Errorf(vmName + ">> current status: " + status)
 }
 
-func ChangeSetting(vmName string, cpu, ram int){
+func ChangeSetting(vmName string, cpu, ram int)(string, error){
+	args := []string{"modifyvm", vmName}
+
 	if cpu > 0{
-		cmd := exec.Command(VBoxCommand, "modifyvm",vmName,"--cpus",strconv.Itoa(cpu))
-		printCommand(cmd)
-		output, err := cmd.CombinedOutput()
-		printOutput(output)
-		printError(err)
+		args = append(args, "--cpus", strconv.Itoa(cpu))
 	}
 	if ram > 0{
-		cmd := exec.Command(VBoxCommand, "modifyvm",vmName,"--memory",strconv.Itoa(ram))
-		printCommand(cmd)
-		output, err := cmd.CombinedOutput()
-		printOutput(output)
-		printError(err)
+		args = append(args, "--memory",strconv.Itoa(ram))
 	}
+	
+	cmd := exec.Command(VBoxCommand, args...)	
+	printCommand(cmd)
+
+	output, err := cmd.CombinedOutput()
+	printOutput(output)
+	if err != nil{
+		printError(err)
+		return "", fmt.Errorf(string(output))
+	}
+
+	return "Ok", nil
 }
 func Clone(vmSrc, vmDst string)(string, error){
 	cmd := exec.Command(VBoxCommand, "clonevm",vmSrc,"--name",vmDst, "--register")
@@ -159,12 +165,17 @@ func Delete(vmName string)(string, error){
 
 	return "Ok", nil
 }
-func Execute(vmName, input string){
+func Execute(vmName, input string)(string, string, error){
 	cmd := exec.Command(VBoxCommand, "guestcontrol",vmName,"run","bin/sh","--username","pwdz","--password", "pwdz", "--wait-stdout", "--wait-stderr", "--","-c",input)
 	printCommand(cmd)
 	output, err := cmd.CombinedOutput()
 	printOutput(output)
-	printError(err)	
+	if err != nil{
+		printError(err)
+		return "", "", fmt.Errorf(string(output))
+	}
+
+	return "Ok", string(output), nil
 }
 func Transfer(vmSrc, vmDst, originPath, dstPath string){
 	 _, err := os.Stat("./temp")

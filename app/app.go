@@ -144,35 +144,36 @@ func endPointHandler(c echo.Context) error{
 		}
 	}
 
-	handleCommand(cmd)
+	cmd.handleCommand()
 
 	return c.String(http.StatusOK, "")
 }
-func handleCommand(cmd command){
+func (cmd command) handleCommand(){
 	switch cmd.Type{
 	case CMDStatus:
-		bytess := handleStatus(cmd)
+		bytess := cmd.handleStatus()
 		log.Println(string(bytess))
 	case CMDOn, CMDOnOff:
-		bytess:=handleOnOff(cmd)
+		bytess:=cmd.handleOnOff()
 		log.Println(string(bytess))
 	case CMDDelete:
-		bytess:=handleDelete(cmd)
+		bytess:=cmd.handleDelete()
 		log.Println(string(bytess))
 	case CMDSetting:
-		handleSetting(cmd)
+		cmd.handleSetting()
 	case CMDTransfer:
-		handleTransfer(cmd)
+		cmd.handleTransfer()
 	case CMDClone:
-		bytess:=handleClone(cmd)
+		bytess:=cmd.handleClone()
 		log.Println(string(bytess))
 	case CMDExecute:
-		handleExecute(cmd)
+		bytess := cmd.handleExecute()
+		log.Println(string(bytess))
 	case CMDUpload:
-		handleUpload(cmd)
+		cmd.handleUpload()
 	}
 }
-func handleStatus(cmd command) []byte{
+func (cmd command) handleStatus() []byte{
 	resp := response{}
 	var respJson []byte
 
@@ -208,7 +209,7 @@ func handleStatus(cmd command) []byte{
 	respJson, _ = json.Marshal(resp)
 	return tools.ConcatJsons(cmdJson, respJson)
 }
-func handleOnOff(cmd command) []byte{
+func (cmd command) handleOnOff() []byte{
 	var status string
 	var err error
 	if cmd.Type == CMDOn{
@@ -225,7 +226,7 @@ func handleOnOff(cmd command) []byte{
 	respJson, _ := json.Marshal(resp)
 	return tools.ConcatJsons(cmdJson, respJson)
 }
-func handleDelete(cmd command)[]byte{
+func (cmd command) handleDelete() []byte{
 	status, err := vbox.Delete(cmd.VmName)
 	resp := response{Status: status}
 	if err != nil{
@@ -234,15 +235,26 @@ func handleDelete(cmd command)[]byte{
 
 	cmdJson, _ := json.Marshal(cmd)
 	respJson, _ := json.Marshal(resp)
+
 	return tools.ConcatJsons(cmdJson, respJson)
 }
-func handleSetting(cmd command){
-	vbox.ChangeSetting(cmd.VmName, cmd.Cpu, cmd.Ram)
+func (cmd command) handleSetting() []byte{
+	status, err := vbox.ChangeSetting(cmd.VmName, cmd.Cpu, cmd.Ram)
+
+	resp := response{Status: status}
+	if err != nil{
+		resp.Err = err.Error()
+	}
+
+	cmdJson, _ := json.Marshal(cmd)
+	respJson, _ := json.Marshal(resp)
+
+	return tools.ConcatJsons(cmdJson, respJson)
 }
-func handleTransfer(cmd command){
+func (cmd command) handleTransfer(){
 	vbox.Transfer(cmd.OriginVM, cmd.DestVM, cmd.OriginPath, cmd.DestPath)
 }
-func handleClone(cmd command)[]byte{
+func (cmd command) handleClone() []byte{
 	status, err := vbox.Clone(cmd.SourceVmName, cmd.DestVmName)
 	resp := response{Status: status}
 	if err != nil{
@@ -251,13 +263,23 @@ func handleClone(cmd command)[]byte{
 
 	cmdJson, _ := json.Marshal(cmd)
 	respJson, _ := json.Marshal(resp)
-	return tools.ConcatJsons(cmdJson, respJson)
 
+	return tools.ConcatJsons(cmdJson, respJson)
 }
-func handleExecute(cmd command){
-	vbox.Execute(cmd.VmName, cmd.Input)
+func (cmd command) handleExecute()[]byte{
+	status, rsp, err := vbox.Execute(cmd.VmName, cmd.Input)
+	resp := response{Status: status, Response: rsp}
+	if err != nil{
+		resp.Err = err.Error()
+	}
+
+	cmdJson, _ := json.Marshal(cmd)
+	respJson, _ := json.Marshal(resp)
+
+	return tools.ConcatJsons(cmdJson, respJson)
 }
-func handleUpload(cmd command){
+func (cmd command) handleUpload() []byte{
 	fmt.Println(cmd)
 	vbox.Upload(cmd.DestVM, cmd.DestPath, cmd.OriginPath)
+	return nil
 }
