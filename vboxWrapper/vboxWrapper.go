@@ -42,36 +42,58 @@ func printOutput(outs []byte) {
   }
 }
 
-func GetStatus(vmName string) (string, error){
+func GetStatus(vmName string) string{
 	cmd := exec.Command(VBoxCommand, "showvminfo",vmName,"--machinereadable")
 
 	printCommand(cmd)
 	output, err := cmd.CombinedOutput()
 	if err != nil{
 		printError(err)
-		return "", err
+		return err.Error()
 	}
 	regex, _ := regexp.Compile("VMState=\"[a-zA-Z]+\"")
 	status := regex.FindString(string(output))
 	log.Println(status)
 	status = strings.Split(status, "=")[1]
 	status = strings.Trim(status, "\"")
-	return status, nil
+	return status
 }
+func GetVmNames() ([]string, error){
+	cmd := exec.Command(VBoxCommand, "list","vms")
 
-func PowerOn(vmName string){
-	status, _ := GetStatus(vmName)
+	printCommand(cmd)
+	output, err := cmd.CombinedOutput()
+	
+	if err != nil{
+		printError(err)
+		return nil, err
+	}
+	regex, _ := regexp.Compile("\"[A-Za-z0-9]+\"")
+	vmNames := regex.FindAllString(string(output), -1)
+
+	for index, vmName := range vmNames{
+		vmNames[index] = strings.Trim(vmName, "\"")
+	}
+	return vmNames, nil
+}
+func PowerOn(vmName string) string{
+	status := GetStatus(vmName)
 	if status == "poweroff" {
 		cmd := exec.Command(VBoxCommand, "startvm",vmName,"--type","headless")
 
 		printCommand(cmd)
 		output, err := cmd.CombinedOutput()
+		if err != nil{
+			printError(err)
+			return err.Error()
+		}
 		printOutput(output)
-		printError(err)
+		return ""
 	}
+	return ""
 }
 func PowerOff(vmName string){
-	status, _ := GetStatus(vmName)
+	status := GetStatus(vmName)
 	if status == "running" {
 		cmd := exec.Command(VBoxCommand, "controlvm",vmName,"poweroff")
 
@@ -145,7 +167,7 @@ func Transfer(vmSrc, vmDst, originPath, dstPath string){
 	printError(err)	
 }
 func Upload(vmDst, dstPath, originPath string ){
-	copyToCommand := exec.Command(VBoxCommand, "guestcontrol",vmDst,"copyto","--target-directory",dstPath, originPath,"--username","pwdz","--password", "pwdz")
+	copyToCommand := exec.Command(VBoxCommand, "guestcontrol",vmDst,"copyto","--target-directory",dstPath, "D:/AUT/Courses/Term6/Cloud Computing/CloudComputing/TestFile.txt","--username","pwdz","--password", "pwdz", "--verbose")
 	printCommand(copyToCommand)
 	copyToOutput, err := copyToCommand.CombinedOutput()
 	printOutput(copyToOutput)
