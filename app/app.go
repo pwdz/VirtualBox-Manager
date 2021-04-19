@@ -164,7 +164,8 @@ func handleCommand(cmd command){
 	case CMDTransfer:
 		handleTransfer(cmd)
 	case CMDClone:
-		handleClone(cmd)
+		bytess:=handleClone(cmd)
+		log.Println(string(bytess))
 	case CMDExecute:
 		handleExecute(cmd)
 	case CMDUpload:
@@ -241,8 +242,17 @@ func handleSetting(cmd command){
 func handleTransfer(cmd command){
 	vbox.Transfer(cmd.OriginVM, cmd.DestVM, cmd.OriginPath, cmd.DestPath)
 }
-func handleClone(cmd command){
-	vbox.Clone(cmd.SourceVmName, cmd.DestVmName)
+func handleClone(cmd command)[]byte{
+	status, err := vbox.Clone(cmd.SourceVmName, cmd.DestVmName)
+	resp := response{Status: status}
+	if err != nil{
+		resp.Err = err.Error()
+	}
+
+	cmdJson, _ := json.Marshal(cmd)
+	respJson, _ := json.Marshal(resp)
+	return tools.ConcatJsons(cmdJson, respJson)
+
 }
 func handleExecute(cmd command){
 	vbox.Execute(cmd.VmName, cmd.Input)

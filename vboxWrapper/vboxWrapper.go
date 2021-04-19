@@ -135,12 +135,17 @@ func ChangeSetting(vmName string, cpu, ram int){
 		printError(err)
 	}
 }
-func Clone(vmSrc, vmDst string){
+func Clone(vmSrc, vmDst string)(string, error){
 	cmd := exec.Command(VBoxCommand, "clonevm",vmSrc,"--name",vmDst, "--register")
 	printCommand(cmd)
 	output, err := cmd.CombinedOutput()
 	printOutput(output)
-	printError(err)	
+	if err != nil{
+		printError(err)
+		return "", fmt.Errorf(string(output))
+	}
+
+	return "Ok", nil
 }
 func Delete(vmName string)(string, error){
 	cmd := exec.Command(VBoxCommand, "unregistervm",vmName,"--delete")
