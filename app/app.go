@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"strings"
@@ -144,34 +143,30 @@ func endPointHandler(c echo.Context) error{
 		}
 	}
 
-	cmd.handleCommand()
+	jsonResponse := cmd.handleCommand()
 
-	return c.String(http.StatusOK, "")
+	return c.JSONBlob(http.StatusOK, jsonResponse)
 }
-func (cmd command) handleCommand(){
+func (cmd command) handleCommand() []byte{
 	switch cmd.Type{
 	case CMDStatus:
-		bytess := cmd.handleStatus()
-		log.Println(string(bytess))
+		return cmd.handleStatus()
 	case CMDOn, CMDOnOff:
-		bytess:=cmd.handleOnOff()
-		log.Println(string(bytess))
+		return cmd.handleOnOff()
 	case CMDDelete:
-		bytess:=cmd.handleDelete()
-		log.Println(string(bytess))
+		return cmd.handleDelete()
 	case CMDSetting:
-		cmd.handleSetting()
+		return cmd.handleSetting()
 	case CMDTransfer:
-		cmd.handleTransfer()
+		return cmd.handleTransfer()
 	case CMDClone:
-		bytess:=cmd.handleClone()
-		log.Println(string(bytess))
+		return cmd.handleClone()
 	case CMDExecute:
-		bytess := cmd.handleExecute()
-		log.Println(string(bytess))
+		return cmd.handleExecute()
 	case CMDUpload:
-		cmd.handleUpload()
+		return cmd.handleUpload()
 	}
+	return []byte("`{'error: 'Invalid command'}`")
 }
 func (cmd command) handleStatus() []byte{
 	resp := response{}
