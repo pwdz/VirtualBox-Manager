@@ -42,21 +42,21 @@ func printOutput(outs []byte) {
   }
 }
 
-func GetStatus(vmName string) string{
+func GetStatus(vmName string) (string, error){
 	cmd := exec.Command(VBoxCommand, "showvminfo",vmName,"--machinereadable")
 
 	printCommand(cmd)
 	output, err := cmd.CombinedOutput()
 	if err != nil{
 		printError(err)
-		return err.Error()
+		return "", err
 	}
 	regex, _ := regexp.Compile("VMState=\"[a-zA-Z]+\"")
 	status := regex.FindString(string(output))
 	log.Println(status)
 	status = strings.Split(status, "=")[1]
 	status = strings.Trim(status, "\"")
-	return status
+	return status, nil
 }
 func GetVmNames() ([]string, error){
 	cmd := exec.Command(VBoxCommand, "list","vms")
@@ -77,7 +77,7 @@ func GetVmNames() ([]string, error){
 	return vmNames, nil
 }
 func PowerOn(vmName string) string{
-	status := GetStatus(vmName)
+	status, _ := GetStatus(vmName)
 	if status == "poweroff" {
 		cmd := exec.Command(VBoxCommand, "startvm",vmName,"--type","headless")
 
@@ -93,7 +93,7 @@ func PowerOn(vmName string) string{
 	return ""
 }
 func PowerOff(vmName string){
-	status := GetStatus(vmName)
+	status, _ := GetStatus(vmName)
 	if status == "running" {
 		cmd := exec.Command(VBoxCommand, "controlvm",vmName,"poweroff")
 

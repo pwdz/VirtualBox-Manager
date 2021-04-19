@@ -15,6 +15,7 @@ import (
 	"github.com/ilyakaznacheev/cleanenv"
 	"github.com/labstack/echo/v4"
 	vbox "github.com/pwdz/cloudComputing/vboxWrapper"
+	tools "github.com/pwdz/cloudComputing/pkg"
 )
 const(
 	CMDStatus	= "status"
@@ -31,7 +32,7 @@ var e* echo.Echo
 
 type( 
 	command struct{
-		Type 			string 	`json:"command,omitempty"`
+		Type 			string 	`json:"command,omitempty" required:"true"`
 		VmName			string	`json:"vmName,omitempty"`
 		Cpu 			int		`json:"cpu,omitempty"`
 		Ram 			int		`json:"ram,omitempty"`
@@ -44,10 +45,11 @@ type(
 		DestPath		string	`json:"destPath,omitempty"`
 	}
 
-	statusResponse struct{
-		Command			string				`json:"command,omitempty"`
-		Error			error				`json:"error,omitempty"`
-		Details			[]map[string]string	`json:"details,omitempty"` 	
+	response struct{
+		Err			error				`json:"error,omitempty"`
+		Status		string				`json:"status,omitempty"`
+		Response	string				`json:"response,omitempty"`
+		Details		[]map[string]string	`json:"details,omitempty"`
 	}
 )
 
@@ -73,7 +75,7 @@ func InitServer(){
 // 			w.Write([]byte("Malformed Token"))
 // 		} else {
 // 			jwtToken := authHeader[1]
-// 			token, err := jwt.Parse(jwtToken, func(token *jwt.Token) (interface{}, error) {
+// 			token, err := jwt.Parse(jwtToken, func(token *jwt.Token) (string{}, error) {
 // 				if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 // 					return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
 // 				}
@@ -168,32 +170,38 @@ func handleCommand(cmd command){
 	}
 }
 func handleStatus(cmd command) []byte{
+	resp := response{}
+	var respJson []byte
+
 	if cmd.VmName != ""{
-		status := vbox.GetStatus(cmd.VmName)
-		
-		respMap := make(map[string]string)
-		
-		respMap["command"] = cmd.Type
-		respMap["vmName"] = cmd.VmName
-		respMap["status"] = status
-		respJson,_ := json.Marshal(respMap)
-		return respJson
+		status, err := vbox.GetStatus(cmd.VmName)
+		resp.Status = status
+		resp.Err = err
 	}else{
 		vmNames, err := vbox.GetVmNames()
 
-		statusResp := statusResponse{Command: cmd.Type}
 		if err != nil{
-			statusResp.Error = err
+			resp.Err = err								
 		}else{
 			statuses := make([]map[string]string, len(vmNames))
 			for index, vmName := range vmNames{
-				statuses[index] = map[string]string{"vmName": vmName, "status": vbox.GetStatus(vmName)}
+				statuses[index] = map[string]string{"vmName": vmName}
+
+				status, err := vbox.GetStatus(vmName)
+				statuses[index]["vmName"] = vmName
+				if err != nil{
+					statuses[index]["error"] = err.Error()
+				}else{
+					statuses[index]["status"] = status
+				}
 			} 
-			statusResp.Details = statuses
+			resp.Details = statuses
 		}
-		respJson, _ := json.Marshal(statusResp)
-		return respJson
 	}
+
+	cmdJson, _ := json.Marshal(cmd)
+	respJson, _ = json.Marshal(resp)
+	return tools.ConcatJsons(cmdJson, respJson)
 }
 func handleOnOff(cmd command){
 	if cmd.Type == CMDOn{
