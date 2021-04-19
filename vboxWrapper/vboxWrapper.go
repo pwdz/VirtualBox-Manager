@@ -76,24 +76,32 @@ func GetVmNames() ([]string, error){
 	}
 	return vmNames, nil
 }
-func PowerOn(vmName string) string{
-	status, _ := GetStatus(vmName)
+func PowerOn(vmName string) (string, error){
+	status, err := GetStatus(vmName)
+	if err != nil{
+		return "", err
+	}
+	
 	if status == "poweroff" {
 		cmd := exec.Command(VBoxCommand, "startvm",vmName,"--type","headless")
 
 		printCommand(cmd)
 		output, err := cmd.CombinedOutput()
+		printOutput(output)
 		if err != nil{
 			printError(err)
-			return err.Error()
+			return "", err
 		}
-		printOutput(output)
-		return ""
+		return "Powering on", nil
 	}
-	return ""
+	return "", fmt.Errorf(vmName + ">> current status: " + status)
 }
-func PowerOff(vmName string){
-	status, _ := GetStatus(vmName)
+func PowerOff(vmName string)(string, error){
+	status, err := GetStatus(vmName)
+	if err != nil{
+		return "", err
+	}
+	
 	if status == "running" {
 		cmd := exec.Command(VBoxCommand, "controlvm",vmName,"poweroff")
 
@@ -101,7 +109,14 @@ func PowerOff(vmName string){
 		output, err := cmd.CombinedOutput()
 		printOutput(output)
 		printError(err)
+		if err != nil{
+			printError(err)
+			return "", err
+		}
+		return "Powering off", nil
 	}
+
+	return "", fmt.Errorf(vmName + ">> current status: " + status)
 }
 
 func ChangeSetting(vmName string, cpu, ram int){

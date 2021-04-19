@@ -46,7 +46,7 @@ type(
 	}
 
 	response struct{
-		Err			error				`json:"error,omitempty"`
+		Err			string				`json:"error,omitempty"`
 		Status		string				`json:"status,omitempty"`
 		Response	string				`json:"response,omitempty"`
 		Details		[]map[string]string	`json:"details,omitempty"`
@@ -154,7 +154,8 @@ func handleCommand(cmd command){
 		bytess := handleStatus(cmd)
 		log.Println(string(bytess))
 	case CMDOn, CMDOnOff:
-		handleOnOff(cmd)
+		bytess:=handleOnOff(cmd)
+		log.Println(string(bytess))
 	case CMDDelete:
 		handleDelete(cmd)
 	case CMDSetting:
@@ -176,12 +177,14 @@ func handleStatus(cmd command) []byte{
 	if cmd.VmName != ""{
 		status, err := vbox.GetStatus(cmd.VmName)
 		resp.Status = status
-		resp.Err = err
+		if err != nil{
+			resp.Err = err.Error()
+		}
 	}else{
 		vmNames, err := vbox.GetVmNames()
 
 		if err != nil{
-			resp.Err = err								
+			resp.Err = err.Error()							
 		}else{
 			statuses := make([]map[string]string, len(vmNames))
 			for index, vmName := range vmNames{
@@ -203,12 +206,22 @@ func handleStatus(cmd command) []byte{
 	respJson, _ = json.Marshal(resp)
 	return tools.ConcatJsons(cmdJson, respJson)
 }
-func handleOnOff(cmd command){
+func handleOnOff(cmd command) []byte{
+	var status string
+	var err error
 	if cmd.Type == CMDOn{
-		vbox.PowerOn(cmd.VmName)
+		status, err = vbox.PowerOn(cmd.VmName)
 	}else{
-		vbox.PowerOff(cmd.VmName)
+		status, err = vbox.PowerOff(cmd.VmName)
 	}
+	cmdJson, _ := json.Marshal(cmd)
+
+	resp := response{Status: status}
+	if err != nil{
+		resp.Err = err.Error()
+	}
+	respJson, _ := json.Marshal(resp)
+	return tools.ConcatJsons(cmdJson, respJson)
 }
 func handleDelete(cmd command){
 	vbox.Delete(cmd.VmName)
