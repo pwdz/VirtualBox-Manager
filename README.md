@@ -1,5 +1,5 @@
 # VirtualBox-Manager
-A simple http server(using [echo](https://github.com/labstack/echo)) and virtualbox wrapper for controlling virtualbox remotly.  
+A simple http server(using [echo](https://github.com/labstack/echo)) and virtualbox wrapper for controlling virtualbox vms remotly.  
 
 available commands:  
 ```
