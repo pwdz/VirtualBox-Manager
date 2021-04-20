@@ -69,7 +69,7 @@ More details:
   "destPath": "/home/temp/"
 }
 ```
-Upload file in `multipart/form-data` content type.
+Upload file in `multipart/form-data` format.
 ```
 destPath
 vmName
