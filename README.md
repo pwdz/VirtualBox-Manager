@@ -1,13 +1,7 @@
 # VirtualBox-Manager
-A simple http server and virtualbox wrapper for controlling virtualbox remotly.  
+A simple http server(Rest api, jwt) and virtualbox wrapper for controlling virtualbox remotly.  
 requests must be sent like the below json format:  
-```json
-{
-  "command": "delete",
-  "vmName": "VM1",
-  "status": "Ok"
-}
-```
+
 available commands:  
 ```
 status
@@ -30,6 +24,13 @@ More details:
 ```json
 {
 "command": "status"
+}
+```
+```json
+{
+  "command": "delete",
+  "vmName": "VM1",
+  "status": "Ok"
 }
 ```
 ```json
