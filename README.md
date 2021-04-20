@@ -1,6 +1,5 @@
 # VirtualBox-Manager
-A simple http server(Rest api, jwt) and virtualbox wrapper for controlling virtualbox remotly.  
-requests must be sent like the below json format:  
+A simple http server(using [echo](https://github.com/labstack/echo)) and virtualbox wrapper for controlling virtualbox remotly.  
 
 available commands:  
 ```
