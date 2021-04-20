@@ -22,7 +22,7 @@ More details:
 ```
 ```json
 {
-"command": "status"
+  "command": "status"
 }
 ```
 ```json
