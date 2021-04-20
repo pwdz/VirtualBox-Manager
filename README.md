@@ -29,6 +29,11 @@ More details:
 ```
 ```json
 {
+"command": "status"
+}
+```
+```json
+{
   "command": "on/off",
   "vmName": "VM1"
 }
@@ -63,4 +68,10 @@ More details:
   "destVM": "VM2",
   "destPath": "/home/temp/"
 }
+```
+Upload file in `multipart/form-data` content type.
+```
+destPath
+vmName
+file
 ```
