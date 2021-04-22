@@ -189,7 +189,7 @@ func Transfer(vmSrc, vmDst, originPath, dstPath string)(string, error){
 	internalPath :=   "./temp/" 
 	log.Println(vmSrc, vmDst)
 
-	copyFromCommand := exec.Command(VBoxCommand, "guestcontrol",vmSrc,"copyfrom","--target-directory",internalPath , originPath,"--username","pwdz","--password", "pwdz")
+	copyFromCommand := exec.Command(VBoxCommand, "guestcontrol",vmSrc,"copyfrom","--target-directory",internalPath , originPath,"--username","pwdz","--password", "pwdz","--verbose")
 	printCommand(copyFromCommand)
 	copyFromOutput, err := copyFromCommand.CombinedOutput()
 	printOutput(copyFromOutput)
@@ -200,7 +200,9 @@ func Transfer(vmSrc, vmDst, originPath, dstPath string)(string, error){
 
 
 	internalPath += fileName
-	copyToCommand := exec.Command(VBoxCommand, "guestcontrol",vmDst,"copyto","--target-directory",dstPath, internalPath,"--username","pwdz","--password", "pwdz")
+	log.Println(internalPath)
+
+	copyToCommand := exec.Command(VBoxCommand, "guestcontrol",vmDst,"copyto","--target-directory",dstPath, internalPath,"--username","pwdz","--password", "pwdz", "--verbose")
 	printCommand(copyToCommand)
 	copyToOutput, err := copyToCommand.CombinedOutput()
 	printOutput(copyToOutput)
@@ -208,6 +210,7 @@ func Transfer(vmSrc, vmDst, originPath, dstPath string)(string, error){
 		printError(err)
 		return "", fmt.Errorf(string(copyToOutput))
 	}
+	os.Remove(internalPath)
 
 	return "Ok", nil
 }
